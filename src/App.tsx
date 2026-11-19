@@ -5,6 +5,8 @@ import TitleScreen from './components/TitleScreen';
 import GameScreen from './components/GameScreen';
 import SummaryScreen from './components/SummaryScreen';
 import InstallPrompt from './components/InstallPrompt';
+import GateScreen from './components/GateScreen';
+import { GATE_ENABLED, GATE_KEY } from './config';
 import { loadInheritTalent } from './engine/talents';
 import { parseChallengeLink, type ChallengeLink } from './utils/share';
 
@@ -44,6 +46,16 @@ export default function App() {
     }
   };
 
+  // 群密码访问门：未启用或已通过（localStorage 标记）时直接进游戏
+  const [gatePassed, setGatePassed] = useState<boolean>(() => {
+    if (!GATE_ENABLED) return true;
+    try {
+      return localStorage.getItem(GATE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+
   // 深链载入的种子挑战载荷（?seed&from&score&age&title；仅挂载时读取一次，刷新后 URL 仍可恢复）
   const [challenge] = useState<ChallengeLink | null>(() => parseChallengeLink(window.location.search));
   // 结算页对决目标：仅当本局确为「该种子的种子挑战」时展示（普通随机局不会命中同一种子）
@@ -75,8 +87,9 @@ export default function App() {
     <div className={`w-screen h-screen flex justify-center items-center overflow-hidden ${theme === 'dark'
       ? 'bg-[radial-gradient(ellipse_at_center,#1a1a30_0%,#0a0a14_70%)]'
       : 'bg-[radial-gradient(ellipse_at_center,#1a1a1a_0%,#000000_70%)]'}`}>
-      <div className="w-full h-full text-white">
-        {game.phase === 'title' && (
+      {gatePassed ? (
+        <div className="w-full h-full text-white">
+          {game.phase === 'title' && (
           <>
             <TitleScreen onStart={startGame} onAutoStart={startAutoGame} onDailyStart={(name) => startDailyGame(name)} onWeeklyStart={(name) => startWeeklyGame(name)} saves={saves} onContinue={continueGame} onSelectSlot={selectSlot} achievements={achievements} stats={stats} daily={daily} dailyHistory={dailyHistory} dailyStreak={dailyStreak} weekly={weekly} weeklyGoal={weeklyGoal} seedScores={seedScores} family={family} theme={theme} onToggleTheme={toggleTheme} onResetFamily={resetFamily} challengeLink={challenge} />
             {/* PWA 安装引导（仅标题页；Android/Chrome 系首次访问展示一次） */}
@@ -130,7 +143,10 @@ export default function App() {
             inheritTalent={loadInheritTalent()}
           />
         )}
-      </div>
+        </div>
+      ) : (
+        <GateScreen onPass={() => setGatePassed(true)} />
+      )}
     </div>
   );
 }
