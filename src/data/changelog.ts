@@ -15,6 +15,14 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.25.1',
+    date: '2026-11-19',
+    title: '群友定制版 · 密码门',
+    items: [
+      '🔒 新增群密码访问门：输入群密码才能进入游戏，只给朋友们玩',
+    ],
+  },
+  {
     version: '0.25.0',
     date: '2026-08-17',
     title: '阶段专属场景背景',
